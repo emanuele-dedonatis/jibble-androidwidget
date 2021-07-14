@@ -16,14 +16,17 @@ class StatusWidgetConfigureActivity : Activity() {
     private var appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
     private lateinit var appWidgetUsername: EditText
     private lateinit var appWidgetPassword: EditText
+    private lateinit var appWidgetInterval: EditText
     private var onClickListener = View.OnClickListener {
         val context = this@StatusWidgetConfigureActivity
 
         // When the button is clicked, store the string locally
         val usernameText = appWidgetUsername.text.toString()
         val passwordText = appWidgetPassword.text.toString()
+        val intervalText = appWidgetPassword.text.toString()
         savePref(context, PrefKey.USERNAME, usernameText)
         savePref(context, PrefKey.PASSWORD, passwordText)
+        savePref(context, PrefKey.INTERVAL, intervalText)
 
         // It is the responsibility of the configuration activity to update the app widget
         val appWidgetManager = AppWidgetManager.getInstance(context)
@@ -49,6 +52,7 @@ class StatusWidgetConfigureActivity : Activity() {
 
         appWidgetUsername = binding.etUsername as EditText
         appWidgetPassword= binding.etPassword as EditText
+        appWidgetInterval= binding.etInterval as EditText
         binding.addButton.setOnClickListener(onClickListener)
 
         // Find the widget id from the intent.
@@ -66,8 +70,9 @@ class StatusWidgetConfigureActivity : Activity() {
             return
         }
 
-        appWidgetUsername.setText(loadPref(this@StatusWidgetConfigureActivity, PrefKey.USERNAME));
-        appWidgetPassword.setText(loadPref(this@StatusWidgetConfigureActivity, PrefKey.PASSWORD));
+        appWidgetUsername.setText(loadPref(this@StatusWidgetConfigureActivity, PrefKey.USERNAME))
+        appWidgetPassword.setText(loadPref(this@StatusWidgetConfigureActivity, PrefKey.PASSWORD))
+        appWidgetInterval.setText(loadPref(this@StatusWidgetConfigureActivity, PrefKey.INTERVAL))
     }
 
 }
@@ -76,7 +81,7 @@ private const val PREFS_NAME = "it.mumu.jibblewidget.StatusWidget"
 private const val PREF_PREFIX_KEY = "appwidget_"
 
 internal enum class PrefKey {
-    USERNAME, PASSWORD
+    USERNAME, PASSWORD, INTERVAL
 }
 
 // Write the prefix to the SharedPreferences object for this widget

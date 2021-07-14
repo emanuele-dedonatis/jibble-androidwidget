@@ -26,6 +26,7 @@ class StatusWidget : AppWidgetProvider() {
         for (appWidgetId in appWidgetIds) {
             deletePref(context, PrefKey.USERNAME)
             deletePref(context, PrefKey.PASSWORD)
+            deletePref(context, PrefKey.INTERVAL)
         }
     }
 
