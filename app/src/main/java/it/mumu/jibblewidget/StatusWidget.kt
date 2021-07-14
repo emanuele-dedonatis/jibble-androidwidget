@@ -24,7 +24,8 @@ class StatusWidget : AppWidgetProvider() {
     override fun onDeleted(context: Context, appWidgetIds: IntArray) {
         // When the user deletes the widget, delete the preference associated with it.
         for (appWidgetId in appWidgetIds) {
-            deleteTitlePref(context, appWidgetId)
+            deletePref(context, PrefKey.USERNAME)
+            deletePref(context, PrefKey.PASSWORD)
         }
     }
 
@@ -42,10 +43,10 @@ internal fun updateAppWidget(
     appWidgetManager: AppWidgetManager,
     appWidgetId: Int
 ) {
-    val widgetText = loadTitlePref(context, appWidgetId)
+    val widgetText = loadPref(context, PrefKey.USERNAME)
     // Construct the RemoteViews object
     val views = RemoteViews(context.packageName, R.layout.status_widget)
-    views.setTextViewText(R.id.appwidget_text, widgetText)
+    views.setTextViewText(R.id.etUsername, widgetText)
 
     // Instruct the widget manager to update the widget
     appWidgetManager.updateAppWidget(appWidgetId, views)

@@ -14,13 +14,16 @@ import it.mumu.jibblewidget.databinding.StatusWidgetConfigureBinding
  */
 class StatusWidgetConfigureActivity : Activity() {
     private var appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
-    private lateinit var appWidgetText: EditText
+    private lateinit var appWidgetUsername: EditText
+    private lateinit var appWidgetPassword: EditText
     private var onClickListener = View.OnClickListener {
         val context = this@StatusWidgetConfigureActivity
 
         // When the button is clicked, store the string locally
-        val widgetText = appWidgetText.text.toString()
-        saveTitlePref(context, appWidgetId, widgetText)
+        val usernameText = appWidgetUsername.text.toString()
+        val passwordText = appWidgetPassword.text.toString()
+        savePref(context, PrefKey.USERNAME, usernameText)
+        savePref(context, PrefKey.PASSWORD, passwordText)
 
         // It is the responsibility of the configuration activity to update the app widget
         val appWidgetManager = AppWidgetManager.getInstance(context)
@@ -44,7 +47,8 @@ class StatusWidgetConfigureActivity : Activity() {
         binding = StatusWidgetConfigureBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        appWidgetText = binding.appwidgetText as EditText
+        appWidgetUsername = binding.etUsername as EditText
+        appWidgetPassword= binding.etPassword as EditText
         binding.addButton.setOnClickListener(onClickListener)
 
         // Find the widget id from the intent.
@@ -62,7 +66,8 @@ class StatusWidgetConfigureActivity : Activity() {
             return
         }
 
-        appWidgetText.setText(loadTitlePref(this@StatusWidgetConfigureActivity, appWidgetId))
+        appWidgetUsername.setText(loadPref(this@StatusWidgetConfigureActivity, PrefKey.USERNAME));
+        appWidgetPassword.setText(loadPref(this@StatusWidgetConfigureActivity, PrefKey.PASSWORD));
     }
 
 }
@@ -70,23 +75,27 @@ class StatusWidgetConfigureActivity : Activity() {
 private const val PREFS_NAME = "it.mumu.jibblewidget.StatusWidget"
 private const val PREF_PREFIX_KEY = "appwidget_"
 
+internal enum class PrefKey {
+    USERNAME, PASSWORD
+}
+
 // Write the prefix to the SharedPreferences object for this widget
-internal fun saveTitlePref(context: Context, appWidgetId: Int, text: String) {
+internal fun savePref(context: Context, key: PrefKey, text: String) {
     val prefs = context.getSharedPreferences(PREFS_NAME, 0).edit()
-    prefs.putString(PREF_PREFIX_KEY + appWidgetId, text)
+    prefs.putString(PREF_PREFIX_KEY + key, text)
     prefs.apply()
 }
 
 // Read the prefix from the SharedPreferences object for this widget.
 // If there is no preference saved, get the default from a resource
-internal fun loadTitlePref(context: Context, appWidgetId: Int): String {
+internal fun loadPref(context: Context, key: PrefKey): String {
     val prefs = context.getSharedPreferences(PREFS_NAME, 0)
-    val titleValue = prefs.getString(PREF_PREFIX_KEY + appWidgetId, null)
-    return titleValue ?: context.getString(R.string.appwidget_text)
+    val titleValue = prefs.getString(PREF_PREFIX_KEY + key, null)
+    return titleValue ?: ""
 }
 
-internal fun deleteTitlePref(context: Context, appWidgetId: Int) {
+internal fun deletePref(context: Context, key: PrefKey) {
     val prefs = context.getSharedPreferences(PREFS_NAME, 0).edit()
-    prefs.remove(PREF_PREFIX_KEY + appWidgetId)
+    prefs.remove(PREF_PREFIX_KEY + key)
     prefs.apply()
 }
