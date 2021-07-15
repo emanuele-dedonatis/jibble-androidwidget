@@ -5,6 +5,7 @@ import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.EditText
 import it.mumu.jibblewidget.databinding.StatusWidgetConfigureBinding
@@ -23,14 +24,13 @@ class StatusWidgetConfigureActivity : Activity() {
         // When the button is clicked, store the string locally
         val usernameText = appWidgetUsername.text.toString()
         val passwordText = appWidgetPassword.text.toString()
-        val intervalText = appWidgetPassword.text.toString()
+        val intervalText = appWidgetInterval.text.toString()
         savePref(context, PrefKey.USERNAME, usernameText)
         savePref(context, PrefKey.PASSWORD, passwordText)
         savePref(context, PrefKey.INTERVAL, intervalText)
 
         // It is the responsibility of the configuration activity to update the app widget
-        val appWidgetManager = AppWidgetManager.getInstance(context)
-        updateAppWidget(context, appWidgetManager, appWidgetId)
+        requestJibbleStatus(context, appWidgetId)
 
         // Make sure we pass back the original appWidgetId
         val resultValue = Intent()
@@ -81,26 +81,16 @@ private const val PREFS_NAME = "it.mumu.jibblewidget.StatusWidget"
 private const val PREF_PREFIX_KEY = "appwidget_"
 
 internal enum class PrefKey {
-    USERNAME, PASSWORD, INTERVAL
+    USERNAME, PASSWORD, INTERVAL, WIDGETID
 }
 
-// Write the prefix to the SharedPreferences object for this widget
 internal fun savePref(context: Context, key: PrefKey, text: String) {
     val prefs = context.getSharedPreferences(PREFS_NAME, 0).edit()
     prefs.putString(PREF_PREFIX_KEY + key, text)
     prefs.apply()
 }
 
-// Read the prefix from the SharedPreferences object for this widget.
-// If there is no preference saved, get the default from a resource
-internal fun loadPref(context: Context, key: PrefKey): String {
+internal fun loadPref(context: Context, key: PrefKey): String? {
     val prefs = context.getSharedPreferences(PREFS_NAME, 0)
-    val titleValue = prefs.getString(PREF_PREFIX_KEY + key, null)
-    return titleValue ?: ""
-}
-
-internal fun deletePref(context: Context, key: PrefKey) {
-    val prefs = context.getSharedPreferences(PREFS_NAME, 0).edit()
-    prefs.remove(PREF_PREFIX_KEY + key)
-    prefs.apply()
+    return prefs.getString(PREF_PREFIX_KEY + key, null)
 }
