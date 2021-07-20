@@ -92,5 +92,5 @@ internal fun updateView(
         trigger.add(Calendar.MINUTE, DEFAULT_INTERVAL)
     }
     val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-    alarmManager.set(AlarmManager.RTC_WAKEUP, trigger.timeInMillis, pendingIntent)
+    alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, trigger.timeInMillis, pendingIntent)
 }
