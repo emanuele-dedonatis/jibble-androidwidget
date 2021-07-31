@@ -6,6 +6,7 @@ import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
+import android.view.View
 import android.widget.RemoteViews
 import kotlinx.coroutines.*
 import java.util.*
@@ -24,9 +25,8 @@ class StatusWidget : AppWidgetProvider() {
             // Save widget id (only one supported)
             val appWidgetId = appWidgetIds[0]
             savePref(context, PrefKey.WIDGETID, appWidgetId.toString())
-
-            // Request jibble status now
-            requestJibbleStatus(context, appWidgetId)
+            setOnClickIntent(context, appWidgetManager, appWidgetId)
+            setAlarm(context)
         }
     }
 
@@ -45,16 +45,24 @@ internal fun requestJibbleStatus(
     context: Context,
     appWidgetId: Int
 ) {
+    // Show spinner
+    val views = RemoteViews(context.packageName, R.layout.status_widget)
+    views.setViewVisibility(R.id.imageView, View.GONE);
+    views.setViewVisibility(R.id.progressBar, View.VISIBLE);
+    val appWidgetManager = AppWidgetManager.getInstance(context)
+    appWidgetManager.updateAppWidget(appWidgetId, views)
+
     val username = loadPref(context, PrefKey.USERNAME);
     val password = loadPref(context, PrefKey.PASSWORD);
-
     if(username != null && password != null) {
         GlobalScope.launch {
+            // Request jibble status
             withContext(Dispatchers.IO) {
                 val status = getJibbleStatus(username, password)
-                val appWidgetManager = AppWidgetManager.getInstance(context)
+
+                // Update view
                 withContext(Dispatchers.Main) {
-                    updateView(context, appWidgetManager, appWidgetId, status)
+                    updateView(context, status, appWidgetManager, appWidgetId)
                 }
             }
         }
@@ -63,34 +71,49 @@ internal fun requestJibbleStatus(
 
 internal fun updateView(
     context: Context,
+    status: JibbleStatus,
     appWidgetManager: AppWidgetManager,
-    appWidgetId: Int,
-    status: JibbleStatus
+    appWidgetId: Int
 ) {
-    val views = RemoteViews(context.packageName, R.layout.status_widget)
-
     // Update image view
     var srcId = R.drawable.jibble_unknown
     when (status) {
         JibbleStatus.IN -> srcId = R.drawable.jibble_in
         JibbleStatus.OUT -> srcId = R.drawable.jibble_out
     }
+
+    val views = RemoteViews(context.packageName, R.layout.status_widget)
     views.setImageViewResource(R.id.imageView, srcId)
+    views.setViewVisibility(R.id.imageView, View.VISIBLE);
+    views.setViewVisibility(R.id.progressBar, View.GONE);
 
-    // Instruct the widget manager to update the widget
+    setOnClickIntent(context, appWidgetManager, appWidgetId)
     appWidgetManager.updateAppWidget(appWidgetId, views)
+}
 
-    // Schedule next update
+internal fun setAlarm(
+    context: Context
+) {
     val intent = Intent(context, StatusWidget::class.java)
     intent.action = REQUEST_JIBBLE_STATUS
-    val pendingIntent = PendingIntent.getBroadcast(context, 0, intent, 0)
-    val trigger = Calendar.getInstance()
+    val pendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT)
+
     val minutes = loadPref(context, PrefKey.INTERVAL) ?: DEFAULT_INTERVAL.toString();
-    try{
-        trigger.add(Calendar.MINUTE, minutes.toInt())
-    }catch(e: NumberFormatException) {
-        trigger.add(Calendar.MINUTE, DEFAULT_INTERVAL)
-    }
     val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-    alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, trigger.timeInMillis, pendingIntent)
+    alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), minutes.toLong()*60000, pendingIntent)
+}
+
+internal fun setOnClickIntent(
+    context: Context,
+    appWidgetManager: AppWidgetManager,
+    appWidgetId: Int
+) {
+    // Update status on click
+    val intent = Intent(context, StatusWidget::class.java)
+    intent.action = REQUEST_JIBBLE_STATUS
+    val pendingIntent = PendingIntent.getBroadcast(context, 1, intent, PendingIntent.FLAG_CANCEL_CURRENT)
+
+    val views = RemoteViews(context.packageName, R.layout.status_widget)
+    views.setOnClickPendingIntent(R.id.imageView, pendingIntent)
+    appWidgetManager.updateAppWidget(appWidgetId, views)
 }

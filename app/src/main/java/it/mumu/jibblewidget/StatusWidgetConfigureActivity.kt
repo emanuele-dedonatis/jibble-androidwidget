@@ -18,6 +18,7 @@ class StatusWidgetConfigureActivity : Activity() {
     private lateinit var appWidgetUsername: EditText
     private lateinit var appWidgetPassword: EditText
     private lateinit var appWidgetInterval: EditText
+    private lateinit var binding: StatusWidgetConfigureBinding
     private var onClickListener = View.OnClickListener {
         val context = this@StatusWidgetConfigureActivity
 
@@ -38,7 +39,6 @@ class StatusWidgetConfigureActivity : Activity() {
         setResult(RESULT_OK, resultValue)
         finish()
     }
-    private lateinit var binding: StatusWidgetConfigureBinding
 
     public override fun onCreate(icicle: Bundle?) {
         super.onCreate(icicle)
